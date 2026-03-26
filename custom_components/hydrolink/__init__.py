@@ -15,6 +15,12 @@ Created: June 12, 2025
 Updated: October 3, 2025
 
 Version History:
+- 1.3.0 (2026-03-26) - puchalskipl
+  * Added multi-region support (United States, Europe)
+  * Europe region uses api.hydrolinkhome.eu API endpoint
+  * Automatic metric unit conversion for EU (Liters, kg, L/min)
+  * Added Polish (pl) translation
+
 - 1.2.0 (2025-10-03)
   * Enhanced documentation and inline comments
   * Improved version compatibility across HA releases
@@ -22,7 +28,7 @@ Version History:
   * Comprehensive code quality improvements
   * Fixed ConfigEntry API compatibility issues
   * CI/CD pipeline stabilization
-  
+
 - 1.0.0 (2025-10-03)
   * HACS compatibility and validation
   * Enhanced documentation and comments

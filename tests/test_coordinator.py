@@ -14,7 +14,8 @@ from custom_components.hydrolink.api import HydroLinkApi, CannotConnect, Invalid
 # Test data
 MOCK_CONFIG = {
     "email": "test@example.com",
-    "password": "password123"
+    "password": "password123",
+    "region": "united_states",
 }
 
 MOCK_DEVICE_DATA = {

@@ -24,13 +24,17 @@ Created: June 12, 2025
 Updated: October 3, 2025
 
 Version History:
+- 1.3.0 (2026-03-26) - puchalskipl
+  * Pass region from config entry to HydroLinkApi
+  * Backward compatible: defaults to US region for existing entries
+
 - 1.2.0 (2025-10-03)
   * Enhanced documentation and code organization
   * Improved version compatibility testing
   * Code quality and standards improvements
   * Better error handling patterns
   * Comprehensive testing coverage
-  
+
 - 1.0.0 (2025-10-03)
   * Production release with enhanced stability
   * Improved error handling and recovery
@@ -60,7 +64,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 from .api import HydroLinkApi, CannotConnect, InvalidAuth
-from .const import DOMAIN
+from .const import DOMAIN, CONF_REGION, REGION_US
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,6 +82,7 @@ class HydroLinkDataUpdateCoordinator(DataUpdateCoordinator):
         self.api = HydroLinkApi(
             entry.data[CONF_EMAIL],
             entry.data[CONF_PASSWORD],
+            entry.data.get(CONF_REGION, REGION_US),
         )
         # Initialize the DataUpdateCoordinator
         super().__init__(

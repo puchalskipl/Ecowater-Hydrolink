@@ -27,6 +27,9 @@ Created: June 12, 2025
 Updated: October 3, 2025
 
 Version History:
+- 1.3.0 (2026-03-26) - puchalskipl
+  * Added Europe region support (api.hydrolinkhome.eu)
+
 - 1.2.0 (2025-10-03)
   * Enhanced documentation and code comments
   * Improved error handling and logging standards
@@ -34,7 +37,7 @@ Version History:
   * Code quality and linting enhancements
   * Comprehensive testing infrastructure
   * Multi-environment CI/CD validation
-  
+
 - 1.0.0 (2025-10-03)
   * Production release with HACS compatibility
   * Enhanced documentation and error handling
@@ -105,24 +108,33 @@ class HydroLinkApi:
     Parameters:
         email (str): HydroLink account email
         password (str): HydroLink account password
+        region (str): Region identifier (default: "united_states")
     """
 
-    BASE_URL = "https://api.hydrolinkhome.com/v1"
-    WS_BASE_URL = "wss://api.hydrolinkhome.com"
+    DEFAULT_BASE_URL = "https://api.hydrolinkhome.com/v1"
+    DEFAULT_WS_BASE_URL = "wss://api.hydrolinkhome.com"
 
-    def __init__(self, email: str, password: str) -> None:
+    def __init__(self, email: str, password: str, region: str = "united_states") -> None:
         """Initialize the API.
 
         Args:
             email: The users HydroLink email
             password: The users HydroLink password
+            region: The region identifier for API endpoint selection
         """
+        from .const import REGIONS, REGION_US
+
         self.email: str = email
         self.password: str = password
         self.auth_cookie: Optional[str] = None
         self.ws_message_count: int = 0
         self.waiting_for_ws_thread_to_end: int = 1
         self.ws_uri: str = ""
+
+        region_config = REGIONS.get(region, REGIONS[REGION_US])
+        self.BASE_URL: str = region_config["base_url"]
+        self.WS_BASE_URL: str = region_config["ws_base_url"]
+        self.auth_cookie_name: str = region_config["auth_cookie_name"]
 
     def login(self) -> bool:
         """Authenticate with the HydroLink API.
@@ -163,7 +175,7 @@ class HydroLinkApi:
             response.raise_for_status()
             
             # Get authentication cookie
-            self.auth_cookie = response.cookies.get("hhfoffoezyzzoeibwv")
+            self.auth_cookie = response.cookies.get(self.auth_cookie_name)
             if not self.auth_cookie:
                 raise CannotConnect("No authentication cookie received")
             
@@ -304,7 +316,7 @@ class HydroLinkApi:
             response = requests.get(
                 f"{self.BASE_URL}/devices",
                 params={"all": "false", "per_page": "200"},
-                cookies={"hhfoffoezyzzoeibwv": self.auth_cookie},
+                cookies={self.auth_cookie_name: self.auth_cookie},
                 timeout=10,
             )
             
@@ -327,7 +339,7 @@ class HydroLinkApi:
                     # Get the WebSocket URI for the device
                     response = requests.get(
                         f"{self.BASE_URL}/devices/{device_id}/live",
-                        cookies={"hhfoffoezyzzoeibwv": self.auth_cookie},
+                        cookies={self.auth_cookie_name: self.auth_cookie},
                         timeout=10,
                     )
                     response.raise_for_status()
@@ -379,7 +391,7 @@ class HydroLinkApi:
             response = requests.get(
                 f"{self.BASE_URL}/devices",
                 params={"all": "false", "per_page": "200"},
-                cookies={"hhfoffoezyzzoeibwv": self.auth_cookie},
+                cookies={self.auth_cookie_name: self.auth_cookie},
                 timeout=10,
             )
             response.raise_for_status()
@@ -412,7 +424,7 @@ class HydroLinkApi:
         try:
             response = requests.post(
                 f"{self.BASE_URL}/devices/{device_id}/regenerate",
-                cookies={"hhfoffoezyzzoeibwv": self.auth_cookie},
+                cookies={self.auth_cookie_name: self.auth_cookie},
                 timeout=10
             )
             

@@ -33,6 +33,12 @@ Created: June 12, 2025
 Updated: October 10, 2025
 
 Version History:
+- 1.3.0 (2026-03-26) - puchalskipl
+  * Added automatic metric unit conversion for EU region
+  * Sensors use converted_value from API when available (Liters, kg, L/min)
+  * Added API_UNIT_MAP for mapping API units to Home Assistant constants
+  * US region behavior unchanged (imperial units)
+
 - 1.2.2 (2025-10-10)
   * Fixed critical sensor scaling issues
   * Added 15 new sensor definitions from API
@@ -85,6 +91,18 @@ from homeassistant.const import (
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+
+# Mapping from API converted_units strings to Home Assistant unit constants
+API_UNIT_MAP = {
+    "Liters": UnitOfVolume.LITERS,
+    "liters/min": "L/min",
+    "kilograms": UnitOfMass.KILOGRAMS,
+    "pounds": UnitOfMass.POUNDS,
+    "Gallons": UnitOfVolume.GALLONS,
+    "Gallon": UnitOfVolume.GALLONS,
+    "gpm": "gpm",
+    "grains": "grains",
+}
 
 # All available sensor categories
 SENSOR_CATEGORIES = {
@@ -653,7 +671,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         for prop_name, prop_info in device.get("properties", {}).items():
             if isinstance(prop_info, dict) and "value" in prop_info:
-                entities.append(HydroLinkSensor(coordinator, device["id"], prop_name, device_name))
+                entities.append(HydroLinkSensor(coordinator, device["id"], prop_name, device_name, prop_info))
 
     _LOGGER.info("Created %d HydroLink sensor entities", len(entities))
     async_add_entities(entities)
@@ -662,12 +680,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class HydroLinkSensor(CoordinatorEntity, SensorEntity):
     """Representation of a HydroLink sensor."""
 
-    def __init__(self, coordinator, device_id, property_name, device_name):
+    def __init__(self, coordinator, device_id, property_name, device_name, prop_info):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._device_id = device_id
         self._property_name = property_name
         self._device_name = device_name
+
+        # Check if the API provides metric-converted values for this property
+        self._use_converted = "converted_value" in prop_info
 
         description = SENSOR_DESCRIPTIONS.get(property_name)
         if description:
@@ -679,6 +700,16 @@ class HydroLinkSensor(CoordinatorEntity, SensorEntity):
             self._attr_entity_category = description.get("entity_category")
         else:
             self._attr_name = f"{device_name} {property_name.replace('_', ' ').title()}"
+
+        # Override unit with API-provided converted unit (metric for EU region)
+        if self._use_converted:
+            converted_units = prop_info.get("converted_units", "")
+            ha_unit = API_UNIT_MAP.get(converted_units)
+            if ha_unit is not None:
+                self._attr_native_unit_of_measurement = ha_unit
+                # Update device_class for volume sensors switching to liters
+                if ha_unit == UnitOfVolume.LITERS and description:
+                    self._attr_device_class = description.get("device_class")
 
         self._attr_unique_id = f"hydrolink_{device_id}_{property_name}"
 
@@ -692,7 +723,13 @@ class HydroLinkSensor(CoordinatorEntity, SensorEntity):
         """Return the state of the sensor."""
         for device in self.coordinator.data:
             if device["id"] == self._device_id:
-                value = device["properties"][self._property_name].get("value")
+                prop = device["properties"][self._property_name]
+
+                # Use converted_value (metric) when available, otherwise raw value
+                if self._use_converted and "converted_value" in prop:
+                    value = prop.get("converted_value")
+                else:
+                    value = prop.get("value")
 
                 # Handle numeric sensors when value is unknown
                 if (value == "unknown" and self.device_class in [
@@ -717,7 +754,7 @@ class HydroLinkSensor(CoordinatorEntity, SensorEntity):
                     if self._property_name == "capacity_remaining_percent":
                         return value / 10
 
-                    # Salt values are provided in milligrams/thousandths, need to divide by 1000
+                    # Salt values are provided in thousandths, need to divide by 1000
                     if self._property_name in ["avg_salt_per_regen_lbs", "total_salt_use_lbs"]:
                         return value / 1000
 

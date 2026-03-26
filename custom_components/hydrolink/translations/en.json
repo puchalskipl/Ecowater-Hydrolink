@@ -2,6 +2,13 @@
     "config": {
         "step": {
             "user": {
+                "title": "Select Region",
+                "description": "Please select the region for your HydroLink account",
+                "data": {
+                    "region": "Region"
+                }
+            },
+            "credentials": {
                 "title": "Connect to HydroLink",
                 "description": "Please enter your HydroLink email and password",
                 "data": {
