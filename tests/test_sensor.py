@@ -58,22 +58,56 @@ def test_sensor_native_value(sensor):
     """Test sensor value retrieval."""
     assert sensor.native_value == MOCK_VALUE
 
-def test_sensor_tenths_conversion():
-    """Test that sensors ending in _tenths are divided by 10."""
+def test_sensor_salt_level_from_enriched_data():
+    """Test that salt level reads from enriched_data, not raw property."""
+    coordinator = Mock()
+    coordinator.data = [
+        {
+            "id": MOCK_DEVICE_ID,
+            "properties": {
+                "salt_level_tenths": {"value": 40},
+            },
+            "enriched_data": {
+                "water_treatment": {
+                    "salt_level": {
+                        "salt_level_percent": 80,
+                        "salt_level_percent_rounded": 85,
+                    }
+                }
+            },
+        }
+    ]
+
+    sensor = HydroLinkSensor(coordinator, MOCK_DEVICE_ID, "salt_level_tenths", MOCK_DEVICE_NAME, {"value": 40})
+    assert sensor.native_value == 80
+
+def test_sensor_salt_level_fallback():
+    """Test salt level falls back to raw value /10 when enriched_data missing."""
     coordinator = Mock()
     coordinator.data = [
         {
             "id": MOCK_DEVICE_ID,
             "properties": {
                 "salt_level_tenths": {"value": 750},
+            },
+        }
+    ]
+
+    sensor = HydroLinkSensor(coordinator, MOCK_DEVICE_ID, "salt_level_tenths", MOCK_DEVICE_NAME, {"value": 750})
+    assert sensor.native_value == 75.0
+
+def test_sensor_tenths_conversion():
+    """Test that sensors with _tenths are divided by 10."""
+    coordinator = Mock()
+    coordinator.data = [
+        {
+            "id": MOCK_DEVICE_ID,
+            "properties": {
                 "iron_level_tenths_ppm": {"value": 25},
                 "tlc_avg_temp_tenths_c": {"value": 310},
             }
         }
     ]
-
-    salt_sensor = HydroLinkSensor(coordinator, MOCK_DEVICE_ID, "salt_level_tenths", MOCK_DEVICE_NAME, {"value": 750})
-    assert salt_sensor.native_value == 75.0
 
     iron_sensor = HydroLinkSensor(coordinator, MOCK_DEVICE_ID, "iron_level_tenths_ppm", MOCK_DEVICE_NAME, {"value": 25})
     assert iron_sensor.native_value == 2.5
@@ -97,23 +131,23 @@ def test_sensor_capacity_remaining_conversion():
     assert sensor.native_value == 85.0
 
 def test_sensor_salt_values_conversion():
-    """Test that salt values are divided by 1000 (API sends in thousandths)."""
+    """Test salt value scaling: total /10, avg per regen /10000."""
     coordinator = Mock()
     coordinator.data = [
         {
             "id": MOCK_DEVICE_ID,
             "properties": {
-                "avg_salt_per_regen_lbs": {"value": 6670},
-                "total_salt_use_lbs": {"value": 667000},
+                "avg_salt_per_regen_lbs": {"value": 17822},
+                "total_salt_use_lbs": {"value": 802},
             }
         }
     ]
 
-    avg_sensor = HydroLinkSensor(coordinator, MOCK_DEVICE_ID, "avg_salt_per_regen_lbs", MOCK_DEVICE_NAME, {"value": 6670})
-    assert avg_sensor.native_value == 6.67
+    avg_sensor = HydroLinkSensor(coordinator, MOCK_DEVICE_ID, "avg_salt_per_regen_lbs", MOCK_DEVICE_NAME, {"value": 17822})
+    assert avg_sensor.native_value == 1.7822
 
-    total_sensor = HydroLinkSensor(coordinator, MOCK_DEVICE_ID, "total_salt_use_lbs", MOCK_DEVICE_NAME, {"value": 667000})
-    assert total_sensor.native_value == 667.0
+    total_sensor = HydroLinkSensor(coordinator, MOCK_DEVICE_ID, "total_salt_use_lbs", MOCK_DEVICE_NAME, {"value": 802})
+    assert total_sensor.native_value == 80.2
 
 def test_sensor_metric_conversion_liters():
     """Test that EU region sensors use converted_value in liters."""
@@ -154,8 +188,7 @@ def test_sensor_metric_conversion_kilograms():
 
     prop_info = {"value": 17822, "converted_value": 8084, "converted_units": "kilograms"}
     sensor = HydroLinkSensor(coordinator, MOCK_DEVICE_ID, "avg_salt_per_regen_lbs", MOCK_DEVICE_NAME, prop_info)
-    # converted_value 8084 still gets /1000 scaling
-    assert sensor.native_value == 8.084
+    assert sensor.native_value == 0.8084
     assert sensor._attr_native_unit_of_measurement == UnitOfMass.KILOGRAMS
 
 def test_sensor_metric_conversion_liters_per_min():

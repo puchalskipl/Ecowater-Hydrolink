@@ -1,19 +1,16 @@
 # Sensor Documentation
 
-The integration auto-discovers all properties from the HydroLink API and exposes them as sensors. A typical device provides ~100 properties, of which ~55 are enabled by default.
+The integration auto-discovers all properties from the HydroLink API and exposes them as sensors. A typical device provides ~110 properties, of which 38 have explicit definitions and 17 are enabled by default (★).
 
 ## Units
 
-The API provides values in imperial units. For the **hydrolinkhome.eu** region, the API also returns `converted_value` in metric units, which the integration uses automatically:
+For the **hydrolinkhome.eu** region, the API returns `converted_value` in metric units, which the integration uses automatically:
 
 | Measurement | hydrolinkhome.com | hydrolinkhome.eu |
 |-------------|-------------------|------------------|
 | Volume | Gallons | Liters |
 | Flow rate | GPM | L/min |
 | Mass | lbs | kg |
-| Hardness | grains | grains |
-| Temperature | °C | °C |
-| Signal | dBm | dBm |
 
 ## Value Scaling
 
@@ -21,106 +18,98 @@ Some API values are stored in scaled format. The integration converts them autom
 
 | Rule | Affected properties | Example |
 |------|-------------------|---------|
-| Divide by 10 | Any property with `_tenths` in name | `salt_level_tenths`: 750 → 75.0% |
-| Divide by 10 | `capacity_remaining_percent` | 300 → 30.0% |
-| Divide by 1000 | `avg_salt_per_regen_lbs`, `total_salt_use_lbs` | 17822 → 17.822 lbs / 8.084 kg |
+| From enriched_data | `salt_level_tenths` — reads `enriched_data.water_treatment.salt_level.salt_level_percent` | API raw: 40, enriched: **75%** |
+| Divide by 10 | Properties with `_tenths` in name | `iron_level_tenths_ppm`: 30 → 3.0 ppm |
+| Divide by 10 | `capacity_remaining_percent`, `average_exhaustion_percent` | 550 → 55.0% |
+| Divide by 10 | `total_salt_use_lbs` | 650 → 65.0 lbs / 29.5 kg |
+| Divide by 100 | `avg_days_between_regens` | 380 → 3.80 days |
+| Divide by 10000 | `avg_salt_per_regen_lbs` | 15000 → 1.50 lbs / 0.68 kg |
 
-## Default-Enabled Sensors
+## Sensor List
 
-### Basic System Information
+### Basic
 
-| API Property | Sensor Name | Unit | Icon |
-|-------------|-------------|------|------|
-| `_internal_is_online` | Online Status | — | mdi:wifi-check |
-| `app_active` | App Active | — | mdi:checkbox-marked-circle |
-| `current_time_secs` | Device Time | timestamp | mdi:clock-outline |
-| `model_description` | Model | — | mdi:water-well |
-| `nickname` | Device Name | — | mdi:label-outline |
-| `product_serial_number` | Serial Number | — | mdi:barcode |
-| `system_type` | System Type | — | mdi:water-pump |
-| `model_display_code` | Model Display Code | — | mdi:identifier |
-| `base_software_version` | Base Software Version | — | mdi:application |
-| `esp_software_part_number` | ESP Software Part Number | — | mdi:chip |
-| `location` | Location | — | mdi:map-marker |
+| ★ | API Property | Sensor Name | Description | Example Value |
+|---|-------------|-------------|-------------|---------------|
+| ★ | `_internal_is_online` | Online Status | Whether the device is online | `true` |
+| | `model_description` | Model | Device model name | `eVOLUTION 300 BOOST` |
+| | `product_serial_number` | Serial Number | Device serial number | `XXXX-XXXXX-XXXX` |
 
-### Water Usage
+### Water
 
-| API Property | Sensor Name | Unit (COM / EU) | State Class |
-|-------------|-------------|-----------------|-------------|
-| `current_water_flow_gpm` | Current Water Flow | GPM / L/min | Measurement |
-| `gallons_used_today` | Water Used Today | gal / L | Total Increasing |
-| `avg_daily_use_gals` | Average Daily Water Usage | gal / L | Measurement |
-| `total_outlet_water_gals` | Total Treated Water | gal / L | Total Increasing |
-| `peak_water_flow_gpm` | Peak Water Flow | GPM / L/min | Measurement |
-| `treated_water_avail_gals` | Available Treated Water | gal / L | Measurement |
-| `water_counter_gals` | Water Counter | gal / L | Total Increasing |
+| ★ | API Property | Sensor Name | Description | Raw | Plugin (EU) |
+|---|-------------|-------------|-------------|-----|-------------|
+| ★ | `current_water_flow_gpm` | Current Water Flow | Real-time water flow rate | 2.5 gpm | **9.5 L/min** |
+| ★ | `gallons_used_today` | Water Used Today | Water consumed today | 25 gal | **95 L** |
+| ★ | `avg_daily_use_gals` | Average Daily Water Usage | Rolling average daily consumption | 50 gal | **189 L** |
+| ★ | `total_outlet_water_gals` | Total Treated Water | Lifetime treated water volume | 12000 gal | **45 420 L** |
+| | `total_untreated_water_gals` | Total Untreated Water | Lifetime untreated water volume | 30 gal | **114 L** |
+| | `peak_water_flow_gpm` | Peak Water Flow | Maximum recorded flow rate | 7.5 gpm | **28.4 L/min** |
+| | `treated_water_avail_gals` | Available Treated Water | Treated water remaining before regeneration | 120 gal | **454 L** |
+| | `water_counter_gals` | Water Counter | Water meter counter | 12000 gal | **45 420 L** |
 
-### Salt Management
+### Salt
 
-| API Property | Sensor Name | Unit (COM / EU) | State Class |
-|-------------|-------------|-----------------|-------------|
-| `salt_level_tenths` | Salt Level | % | Measurement |
-| `out_of_salt_estimate_days` | Days Until Salt Needed | days | Measurement |
-| `avg_salt_per_regen_lbs` | Salt Used per Regeneration | lbs / kg | Measurement |
-| `total_salt_use_lbs` | Total Salt Used | lbs / kg | Total Increasing |
-| `salt_effic_grains_per_lb` | Salt Efficiency | grains/lb | Measurement |
-| `salt_type_enum` | Salt Type | — | — |
-| `iron_level_tenths_ppm` | Iron Level | ppm | Measurement |
+| ★ | API Property | Sensor Name | Description | Raw | Plugin (EU) |
+|---|-------------|-------------|-------------|-----|-------------|
+| ★ | `salt_level_tenths` | Salt Level | Salt reservoir level (from enriched_data) | 40 | **75%** |
+| ★ | `out_of_salt_estimate_days` | Days Until Salt Needed | Estimated days before salt refill needed | 120 | **120 days** |
+| ★ | `total_salt_use_lbs` | Total Salt Used | Lifetime salt consumption | 650 → 295 | **29.5 kg** (/10) |
+| | `avg_salt_per_regen_lbs` | Salt Used per Regeneration | Average salt per regeneration cycle | 15000 → 6804 | **0.68 kg** (/10000) |
 
-### System Performance
+### Performance
 
-| API Property | Sensor Name | Unit (COM / EU) | State Class |
-|-------------|-------------|-----------------|-------------|
-| `capacity_remaining_percent` | Capacity Remaining | % | Measurement |
-| `operating_capacity_grains` | Operating Capacity | grains | Measurement |
-| `hardness_grains` | Water Hardness | grains | Measurement |
-| `rock_removed_since_rech_lbs` | Hardness Removed Since Recharge | lbs / kg | Measurement |
-| `daily_avg_rock_removed_lbs` | Average Daily Hardness Removed | lbs / kg | Measurement |
-| `total_rock_removed_lbs` | Total Hardness Removed | lbs / kg | Total Increasing |
+| ★ | API Property | Sensor Name | Description | Raw | Plugin |
+|---|-------------|-------------|-------------|-----|--------|
+| ★ | `capacity_remaining_percent` | Capacity Remaining | Remaining resin capacity before regeneration | 550 | **55.0%** (/10) |
+| | `average_exhaustion_percent` | Average Exhaustion | Average resin exhaustion level | 650 | **65.0%** (/10) |
 
 ### Regeneration
 
-| API Property | Sensor Name | Unit | State Class |
-|-------------|-------------|------|-------------|
-| `regen_status_enum` | Regeneration Status | — | — |
-| `days_since_last_regen` | Days Since Last Regeneration | days | Measurement |
-| `total_regens` | Total Regenerations | — | Total Increasing |
-| `manual_regens` | Manual Regenerations | — | Total Increasing |
-| `regen_time_rem_secs` | Regeneration Time Remaining | sec | Measurement |
-| `regen_time_secs` | Regeneration Time | sec | Measurement |
+| ★ | API Property | Sensor Name | Description | Raw | Plugin |
+|---|-------------|-------------|-------------|-----|--------|
+| ★ | `regen_status_enum` | Regeneration Status | Current regeneration cycle state (0=idle) | 0 | **0** |
+| ★ | `days_since_last_regen` | Days Since Last Regeneration | Days elapsed since last regeneration | 3 | **3 days** |
+| ★ | `total_regens` | Total Regenerations | Lifetime regeneration count | 52 | **52** |
+| | `avg_days_between_regens` | Average Days Between Regenerations | Average interval between regeneration cycles | 380 | **3.80 days** (/100) |
+| | `manual_regens` | Manual Regenerations | Manually triggered regeneration count | 2 | **2** |
+| | `regen_time_rem_secs` | Regeneration Time Remaining | Time left in current regeneration cycle | 0 | **0 sec** |
+| | `current_valve_position_enum` | Valve Position | Current valve position (0=service) | 0 | **0** |
 
 ### Alerts
 
 All alert sensors return `0` (OK) or non-zero (active).
 
-| API Property | Sensor Name | Icon |
-|-------------|-------------|------|
-| `low_salt_alert` | Low Salt Alert | mdi:alert-circle |
-| `error_code_alert` | Error Code Alert | mdi:alert |
-| `error_code` | Error Code | mdi:alert-octagon |
-| `flow_monitor_alert` | Flow Monitor Alert | mdi:water-alert |
-| `excessive_water_use_alert` | Excessive Water Use Alert | mdi:water-alert |
-| `floor_leak_detector_alert` | Leak Detector Alert | mdi:water-alert |
-| `service_reminder_alert` | Service Reminder Alert | mdi:tools |
-| `system_error` | System Error | mdi:alert |
+| ★ | API Property | Sensor Name | Description | Value |
+|---|-------------|-------------|-------------|-------|
+| ★ | `low_salt_alert` | Low Salt Alert | Low salt level warning | `0` (OK) |
+| ★ | `error_code_alert` | Error Code Alert | System error indicator | `0` (OK) |
+| ★ | `excessive_water_use_alert` | Excessive Water Use Alert | Abnormally high water usage | `0` (OK) |
+| ★ | `floor_leak_detector_alert` | Leak Detector Alert | Floor leak sensor triggered | `0` (OK) |
+| | `error_code` | Error Code | Numeric error code | `0` |
+| | `depletion_alert` | Depletion Alert | Resin capacity depleted | `0` (OK) |
+| | `flow_monitor_alert` | Flow Monitor Alert | Continuous flow detected | `0` (OK) |
+| | `wtd_alert` | Water to Drain Alert | Water-to-drain monitor triggered | `0` (OK) |
+| | `service_reminder_alert` | Service Reminder Alert | Scheduled maintenance reminder | `0` (OK) |
 
 ### System & Connectivity
 
-| API Property | Sensor Name | Unit | State Class |
-|-------------|-------------|------|-------------|
-| `rf_signal_strength_dbm` | WiFi Signal Strength | dBm | Measurement |
-| `rf_signal_bars` | WiFi Signal Quality | — | Measurement |
-| `days_in_operation` | Days in Operation | days | Measurement |
-| `power_outage_count` | Power Outage Count | — | Total Increasing |
-| `service_reminder_months` | Months Until Service | months | Measurement |
-| `time_lost_events` | Time Lost Events | — | Total Increasing |
-| `tlc_avg_temp_tenths_c` | TLC Average Temperature | °C | Measurement |
-| `service_active` | Service Mode Active | — | — |
-| `vacation_mode` | Vacation Mode | — | — |
+| ★ | API Property | Sensor Name | Description | Value |
+|---|-------------|-------------|-------------|-------|
+| ★ | `rf_signal_strength_dbm` | WiFi Signal Strength | WiFi signal strength | **-55 dBm** |
+| | `rf_signal_bars` | WiFi Signal Quality | WiFi signal bars (0–4) | **3** |
+| | `wifi_ssid` | WiFi SSID | Connected WiFi network name | `MyNetwork-5G` |
+| | `days_in_operation` | Days in Operation | Total days since installation | **210 days** |
+| | `power_outage_count` | Power Outage Count | Number of detected power failures | **3** |
+| | `time_lost_events` | Time Lost Events | Clock reset events | **1** |
+| | `service_reminder_months` | Months Until Service | Months until service due (-1=disabled) | **-1** |
+| | `service_active` | Service Mode Active | Whether service mode is enabled | `false` |
+| | `base_software_version` | Base Software Version | Controller firmware version | `T3.1 MPC01165-2523` |
+| | `esp_software_part_number` | ESP Software Part Number | WiFi module firmware version | `W1.0.0 7396274` |
 
 ## Additional Sensors
 
-Properties returned by the API that don't have an explicit sensor definition are still created as sensors with auto-generated names (e.g. `avg_daily_dev_day_1_gals` becomes "Avg Daily Dev Day 1 Gals"). These are disabled by default but can be enabled in **Settings > Devices & Services > HydroLink > Entities**.
+Properties returned by the API that don't have an explicit sensor definition (~70 technical/config properties) are still created as sensors with auto-generated names. These are disabled by default but can be enabled in **Settings > Devices & Services > HydroLink > Entities**.
 
 ## Source
 

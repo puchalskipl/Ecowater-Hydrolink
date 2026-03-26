@@ -27,39 +27,61 @@
         }
     },
     "entity": {
-        "binary_sensor": {
-            "connection_status": {
-                "name": "Connection Status",
-                "state": {
-                    "on": "Online",
-                    "off": "Offline"
-                }
-            },
-            "regeneration_status": {
-                "name": "Regeneration Status",
-                "state": {
-                    "on": "Regenerating",
-                    "off": "Idle"
-                }
-            }
-        },
         "sensor": {
-            "salt_level": {
-                "name": "Salt Level",
-                "state": {
-                    "ok": "OK",
-                    "low": "Low",
-                    "very_low": "Very Low"
+            "_internal_is_online": { "name": "Online Status" },
+            "model_description": { "name": "Model" },
+            "product_serial_number": { "name": "Serial Number" },
+            "current_water_flow_gpm": { "name": "Current Water Flow" },
+            "gallons_used_today": { "name": "Water Used Today" },
+            "avg_daily_use_gals": { "name": "Average Daily Water Usage" },
+            "total_outlet_water_gals": { "name": "Total Treated Water" },
+            "total_untreated_water_gals": { "name": "Total Untreated Water" },
+            "peak_water_flow_gpm": { "name": "Peak Water Flow" },
+            "treated_water_avail_gals": { "name": "Available Treated Water" },
+            "water_counter_gals": { "name": "Water Counter" },
+            "salt_level_tenths": { "name": "Salt Level" },
+            "out_of_salt_estimate_days": { "name": "Days Until Salt Needed" },
+            "avg_salt_per_regen_lbs": { "name": "Salt Used per Regeneration" },
+            "total_salt_use_lbs": { "name": "Total Salt Used" },
+            "capacity_remaining_percent": { "name": "Capacity Remaining" },
+            "average_exhaustion_percent": { "name": "Average Exhaustion" },
+            "regen_status_enum": { "name": "Regeneration Status" },
+            "days_since_last_regen": { "name": "Days Since Last Regeneration" },
+            "avg_days_between_regens": { "name": "Average Days Between Regenerations" },
+            "total_regens": { "name": "Total Regenerations" },
+            "manual_regens": { "name": "Manual Regenerations" },
+            "regen_time_rem_secs": { "name": "Regeneration Time Remaining" },
+            "current_valve_position_enum": { "name": "Valve Position" },
+            "low_salt_alert": { "name": "Low Salt Alert" },
+            "error_code": { "name": "Error Code" },
+            "error_code_alert": { "name": "Error Code Alert" },
+            "depletion_alert": { "name": "Depletion Alert" },
+            "flow_monitor_alert": { "name": "Flow Monitor Alert" },
+            "excessive_water_use_alert": { "name": "Excessive Water Use Alert" },
+            "floor_leak_detector_alert": { "name": "Leak Detector Alert" },
+            "wtd_alert": { "name": "Water to Drain Alert" },
+            "service_reminder_alert": { "name": "Service Reminder Alert" },
+            "rf_signal_strength_dbm": { "name": "WiFi Signal Strength" },
+            "rf_signal_bars": { "name": "WiFi Signal Quality" },
+            "wifi_ssid": { "name": "WiFi SSID" },
+            "days_in_operation": { "name": "Days in Operation" },
+            "power_outage_count": { "name": "Power Outage Count" },
+            "time_lost_events": { "name": "Time Lost Events" },
+            "service_reminder_months": { "name": "Months Until Service" },
+            "service_active": { "name": "Service Mode Active" },
+            "base_software_version": { "name": "Base Software Version" },
+            "esp_software_part_number": { "name": "ESP Software Part Number" }
+        }
+    },
+    "services": {
+        "trigger_regeneration": {
+            "name": "Trigger Regeneration",
+            "description": "Trigger a manual regeneration cycle for a specific water softener.",
+            "fields": {
+                "device_id": {
+                    "name": "Device",
+                    "description": "The water softener device to regenerate."
                 }
-            },
-            "water_flow": {
-                "name": "Water Flow"
-            },
-            "total_water_used": {
-                "name": "Total Water Used"
-            },
-            "days_since_regeneration": {
-                "name": "Days Since Regeneration"
             }
         }
     },

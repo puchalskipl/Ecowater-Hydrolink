@@ -9,7 +9,7 @@ A Home Assistant custom component for EcoWater HydroLink connected water softene
 ## Features
 
 - Real-time monitoring via WebSocket connections
-- 40+ sensors across 8 categories (water usage, salt, performance, regeneration, alerts, signal, maintenance, system)
+- ~110 sensors auto-discovered from API, 17 enabled by default
 - Manual regeneration control via service calls
 - **Multi-region support**: hydrolinkhome.eu (default) and hydrolinkhome.com
 - Automatic metric units for EU region (Liters, kg, L/min)
@@ -36,21 +36,19 @@ A Home Assistant custom component for EcoWater HydroLink connected water softene
 
 ## Sensors
 
-The integration auto-discovers all sensors from your device (typically 40+). You can enable/disable individual sensors in **Settings → Devices & Services → HydroLink → Entities**.
+The integration auto-discovers all sensors from your device (~110 properties). 17 most useful sensors are enabled by default. You can enable/disable any sensor in **Settings → Devices & Services → HydroLink → Entities**.
 
-Default-enabled sensors include:
+Default-enabled sensors (★):
 
 | Category | Sensors |
 |----------|---------|
-| **Water Usage** | Current Flow, Water Used Today, Average Daily Usage, Total Treated Water, Peak Flow, Available Treated Water |
-| **Salt** | Salt Level (%), Days Until Salt Needed, Salt Per Regeneration, Total Salt Used, Salt Efficiency |
-| **Performance** | Capacity Remaining (%), Operating Capacity, Water Hardness, Hardness Removed |
-| **Regeneration** | Status, Days Since Last Regen, Total/Manual Regen Count, Time Remaining |
-| **Alerts** | Low Salt, Error Code, Flow Monitor, Excessive Water Use, Leak Detector, Service Reminder |
-| **System** | Online Status, WiFi Signal (dBm), Signal Bars, Days in Operation, Power Outages |
+| **Daily** | Online Status, Salt Level (%), Days Until Salt Needed, Water Used Today, Current Flow, Regeneration Status |
+| **Weekly** | Average Daily Usage, Capacity Remaining (%), Days Since Last Regen, WiFi Signal |
+| **Alerts** | Low Salt, Error Code, Excessive Water Use, Leak Detector |
+| **Statistics** | Total Treated Water, Total Salt Used, Total Regenerations |
 
-> **EU**: Volume sensors show Liters, mass sensors show kg, flow sensors show L/min.
-> **COM**: Gallons, lbs, GPM (imperial units).
+> **hydrolinkhome.eu**: Volume in Liters, mass in kg, flow in L/min.
+> **hydrolinkhome.com**: Gallons, lbs, GPM (imperial units).
 
 Full sensor documentation: [SENSORS.md](SENSORS.md)
 
@@ -82,25 +80,27 @@ logger:
 ## Version History
 
 ### 1.3.0 (2026-03-26)
-- Multi-region support (United States / Europe)
-- Europe API endpoint (`api.hydrolinkhome.eu`) with separate auth cookie handling
+- Multi-region support (hydrolinkhome.eu default, hydrolinkhome.com)
 - Automatic metric unit conversion for EU region (Liters, kg, L/min)
 - Two-step config flow with region selection
+- Salt level read from enriched_data for accurate percentage
+- Corrected salt and regeneration value scaling
+- Reduced default-enabled sensors from ~80 to 17 most useful
+- Cleaned up sensor definitions (38 explicit, ~70 auto-discovered)
 - Polish translation
-- Default region: hydrolinkhome.eu
+- Project cleanup and documentation rewrite
 
 ### 1.2.2 (2025-10-10)
 - Fixed sensor scaling issues (tenths, capacity, salt values)
-- Added 15 new sensor definitions
 - Added `device_class: water` for Energy Dashboard support
 
 ### 1.2.0 (2025-10-03)
-- Enhanced documentation, multi-version testing (Python 3.9–3.11)
-- ConfigEntry API compatibility fixes, CI/CD stabilization
+- Multi-version testing (Python 3.9–3.11)
+- ConfigEntry API compatibility fixes
 
 ### 1.0.0 (2025-10-02)
 - Initial HACS-compatible release
-- 30+ sensors, WebSocket real-time updates, manual regeneration service
+- WebSocket real-time updates, manual regeneration service
 
 ## License
 

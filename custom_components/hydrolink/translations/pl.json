@@ -27,39 +27,61 @@
         }
     },
     "entity": {
-        "binary_sensor": {
-            "connection_status": {
-                "name": "Status połączenia",
-                "state": {
-                    "on": "Online",
-                    "off": "Offline"
-                }
-            },
-            "regeneration_status": {
-                "name": "Status regeneracji",
-                "state": {
-                    "on": "Regeneracja",
-                    "off": "Bezczynny"
-                }
-            }
-        },
         "sensor": {
-            "salt_level": {
-                "name": "Poziom soli",
-                "state": {
-                    "ok": "OK",
-                    "low": "Niski",
-                    "very_low": "Bardzo niski"
+            "_internal_is_online": { "name": "Status połączenia" },
+            "model_description": { "name": "Model" },
+            "product_serial_number": { "name": "Numer seryjny" },
+            "current_water_flow_gpm": { "name": "Aktualny przepływ wody" },
+            "gallons_used_today": { "name": "Zużycie wody dzisiaj" },
+            "avg_daily_use_gals": { "name": "Średnie dzienne zużycie wody" },
+            "total_outlet_water_gals": { "name": "Łączna woda przefiltrowana" },
+            "total_untreated_water_gals": { "name": "Łączna woda nieprzetworzona" },
+            "peak_water_flow_gpm": { "name": "Maksymalny przepływ wody" },
+            "treated_water_avail_gals": { "name": "Dostępna woda do regeneracji" },
+            "water_counter_gals": { "name": "Licznik wody" },
+            "salt_level_tenths": { "name": "Poziom soli" },
+            "out_of_salt_estimate_days": { "name": "Dni do uzupełnienia soli" },
+            "avg_salt_per_regen_lbs": { "name": "Zużycie soli na regenerację" },
+            "total_salt_use_lbs": { "name": "Łączne zużycie soli" },
+            "capacity_remaining_percent": { "name": "Pozostała pojemność" },
+            "average_exhaustion_percent": { "name": "Średnie wyczerpanie" },
+            "regen_status_enum": { "name": "Status regeneracji" },
+            "days_since_last_regen": { "name": "Dni od ostatniej regeneracji" },
+            "avg_days_between_regens": { "name": "Średni czas między regeneracjami" },
+            "total_regens": { "name": "Łączna liczba regeneracji" },
+            "manual_regens": { "name": "Ręczne regeneracje" },
+            "regen_time_rem_secs": { "name": "Czas do końca regeneracji" },
+            "current_valve_position_enum": { "name": "Pozycja zaworu" },
+            "low_salt_alert": { "name": "Alert niskiego poziomu soli" },
+            "error_code": { "name": "Kod błędu" },
+            "error_code_alert": { "name": "Alert kodu błędu" },
+            "depletion_alert": { "name": "Alert wyczerpania złoża" },
+            "flow_monitor_alert": { "name": "Alert monitora przepływu" },
+            "excessive_water_use_alert": { "name": "Alert nadmiernego zużycia wody" },
+            "floor_leak_detector_alert": { "name": "Alert czujnika wycieku" },
+            "wtd_alert": { "name": "Alert wody do odpływu" },
+            "service_reminder_alert": { "name": "Przypomnienie o serwisie" },
+            "rf_signal_strength_dbm": { "name": "Siła sygnału WiFi" },
+            "rf_signal_bars": { "name": "Jakość sygnału WiFi" },
+            "wifi_ssid": { "name": "Nazwa sieci WiFi" },
+            "days_in_operation": { "name": "Dni pracy" },
+            "power_outage_count": { "name": "Liczba przerw w zasilaniu" },
+            "time_lost_events": { "name": "Zdarzenia utraty czasu" },
+            "service_reminder_months": { "name": "Miesiące do serwisu" },
+            "service_active": { "name": "Tryb serwisowy" },
+            "base_software_version": { "name": "Wersja oprogramowania" },
+            "esp_software_part_number": { "name": "Wersja modułu WiFi" }
+        }
+    },
+    "services": {
+        "trigger_regeneration": {
+            "name": "Uruchom regenerację",
+            "description": "Uruchom ręczną regenerację wybranego zmiękczacza wody.",
+            "fields": {
+                "device_id": {
+                    "name": "Urządzenie",
+                    "description": "Zmiękczacz wody do regeneracji."
                 }
-            },
-            "water_flow": {
-                "name": "Przepływ wody"
-            },
-            "total_water_used": {
-                "name": "Całkowite zużycie wody"
-            },
-            "days_since_regeneration": {
-                "name": "Dni od regeneracji"
             }
         }
     },
