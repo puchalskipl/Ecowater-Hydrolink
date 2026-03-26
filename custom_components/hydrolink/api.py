@@ -2,7 +2,6 @@
 """EcoWater HydroLink API interface."""
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 import json
 import logging
@@ -14,16 +13,6 @@ import time
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class Device:
-    """Represents a HydroLink device."""
-
-    id: str
-    nickname: str
-    system_type: str
-    properties: Dict[str, Any]
-
-
 class HydroLinkApi:
     """HydroLink API interface.
 
@@ -31,12 +20,9 @@ class HydroLinkApi:
     for EcoWater HydroLink water softeners.
     """
 
-    DEFAULT_BASE_URL = "https://api.hydrolinkhome.com/v1"
-    DEFAULT_WS_BASE_URL = "wss://api.hydrolinkhome.com"
-
-    def __init__(self, email: str, password: str, region: str = "united_states") -> None:
+    def __init__(self, email: str, password: str, region: str = "hydrolinkhome_eu") -> None:
         """Initialize the API."""
-        from .const import REGIONS, REGION_US
+        from .const import REGIONS, REGION_EU
 
         self.email: str = email
         self.password: str = password
@@ -45,7 +31,7 @@ class HydroLinkApi:
         self.waiting_for_ws_thread_to_end: int = 1
         self.ws_uri: str = ""
 
-        region_config = REGIONS.get(region, REGIONS[REGION_US])
+        region_config = REGIONS.get(region, REGIONS[REGION_EU])
         self.BASE_URL: str = region_config["base_url"]
         self.WS_BASE_URL: str = region_config["ws_base_url"]
         self.auth_cookie_name: str = region_config["auth_cookie_name"]

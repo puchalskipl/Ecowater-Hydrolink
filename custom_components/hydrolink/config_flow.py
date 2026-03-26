@@ -7,14 +7,14 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, CONF_REGION, REGIONS, REGION_US
+from .const import DOMAIN, CONF_REGION, REGIONS, REGION_EU
 from .api import HydroLinkApi, CannotConnect, InvalidAuth
 
 _LOGGER = logging.getLogger(__name__)
 
 REGION_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_REGION, default=REGION_US): vol.In(
+        vol.Required(CONF_REGION, default=REGION_EU): vol.In(
             {key: config["name"] for key, config in REGIONS.items()}
         ),
     }
@@ -37,7 +37,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the config flow."""
-        self._region: str = REGION_US
+        self._region: str = REGION_EU
 
     async def async_step_user(self, user_input=None):
         """Handle the region selection step."""

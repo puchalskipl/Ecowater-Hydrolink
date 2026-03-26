@@ -29,17 +29,6 @@ API_UNIT_MAP = {
     "grains": "grains",
 }
 
-SENSOR_CATEGORIES = {
-    "BASIC": "Basic system information",
-    "WATER": "Water usage and flow metrics",
-    "SALT": "Salt level and usage metrics",
-    "REGEN": "Regeneration information",
-    "PERFORMANCE": "System performance metrics",
-    "MAINTENANCE": "Maintenance and service information",
-    "ALERTS": "System alerts and warnings",
-    "SYSTEM": "System status and configuration"
-}
-
 DEFAULT_ENABLED_SENSORS = {
     "_internal_is_online",
     "app_active",

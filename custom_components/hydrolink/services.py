@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """EcoWater HydroLink service calls."""
-from typing import Dict, Any
 import voluptuous as vol
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.const import ATTR_DEVICE_ID

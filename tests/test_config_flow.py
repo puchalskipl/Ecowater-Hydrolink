@@ -2,7 +2,7 @@
 from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from homeassistant import config_entries, data_entry_flow
-from custom_components.hydrolink.const import DOMAIN, CONF_REGION, REGION_US, REGION_EU
+from custom_components.hydrolink.const import DOMAIN, CONF_REGION, REGION_COM, REGION_EU
 from custom_components.hydrolink.config_flow import ConfigFlow
 from custom_components.hydrolink.api import CannotConnect, InvalidAuth
 from tests.helpers import create_mock_hass
@@ -45,7 +45,7 @@ async def test_region_selection_proceeds_to_credentials():
     """Test that selecting a region proceeds to credentials step."""
     flow = setup_mock_flow()
 
-    result = await flow.async_step_user({CONF_REGION: REGION_US})
+    result = await flow.async_step_user({CONF_REGION: REGION_COM})
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "credentials"
 
@@ -55,7 +55,7 @@ async def test_user_input_validation():
     flow = setup_mock_flow()
 
     # Select region first
-    await flow.async_step_user({CONF_REGION: REGION_US})
+    await flow.async_step_user({CONF_REGION: REGION_COM})
 
     # Test with empty email
     result = await flow.async_step_credentials({"email": "", "password": MOCK_PASSWORD})
@@ -84,7 +84,7 @@ async def test_successful_config_flow():
         return_value=True,
     ):
         # First select region
-        result = await flow.async_step_user({CONF_REGION: REGION_US})
+        result = await flow.async_step_user({CONF_REGION: REGION_COM})
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "credentials"
 
@@ -99,7 +99,7 @@ async def test_successful_config_flow():
     assert result["data"] == {
         "email": MOCK_EMAIL,
         "password": MOCK_PASSWORD,
-        CONF_REGION: REGION_US,
+        CONF_REGION: REGION_COM,
     }
 
 @pytest.mark.asyncio
@@ -134,7 +134,7 @@ async def test_failed_config_flow_invalid_auth():
     flow = setup_mock_flow()
 
     # Select region first
-    await flow.async_step_user({CONF_REGION: REGION_US})
+    await flow.async_step_user({CONF_REGION: REGION_COM})
 
     # Now submit invalid credentials
     with patch(
@@ -155,7 +155,7 @@ async def test_failed_config_flow_cannot_connect():
     flow = setup_mock_flow()
 
     # Select region first
-    await flow.async_step_user({CONF_REGION: REGION_US})
+    await flow.async_step_user({CONF_REGION: REGION_COM})
 
     # Now submit with connection error
     with patch(

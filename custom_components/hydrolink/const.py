@@ -2,22 +2,21 @@
 """EcoWater HydroLink constants."""
 
 DOMAIN = "hydrolink"
-DEFAULT_UPDATE_INTERVAL = 300  # 5 minutes
 
 CONF_REGION = "region"
 
-REGION_US = "united_states"
-REGION_EU = "europe"
+REGION_COM = "hydrolinkhome_com"
+REGION_EU = "hydrolinkhome_eu"
 
 REGIONS = {
-    REGION_US: {
-        "name": "United States",
+    REGION_COM: {
+        "name": "hydrolinkhome.com",
         "base_url": "https://api.hydrolinkhome.com/v1",
         "ws_base_url": "wss://api.hydrolinkhome.com",
         "auth_cookie_name": "hhfoffoezyzzoeibwv",
     },
     REGION_EU: {
-        "name": "Europe",
+        "name": "hydrolinkhome.eu",
         "base_url": "https://api.hydrolinkhome.eu/v1",
         "ws_base_url": "wss://api.hydrolinkhome.eu",
         "auth_cookie_name": "hhxaifhduswhaiunzp",

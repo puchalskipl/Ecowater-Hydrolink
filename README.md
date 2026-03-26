@@ -6,14 +6,12 @@
 
 A Home Assistant custom component for EcoWater HydroLink connected water softeners. Monitor water usage, salt levels, system performance, and control regeneration — all from Home Assistant.
 
-Based on the original [Hydrolink-Home-Status](https://github.com/GrumpyTanker/Hydrolink-Home-Status) project.
-
 ## Features
 
 - Real-time monitoring via WebSocket connections
 - 40+ sensors across 8 categories (water usage, salt, performance, regeneration, alerts, signal, maintenance, system)
 - Manual regeneration control via service calls
-- **Multi-region support**: United States (`api.hydrolinkhome.com`) and Europe (`api.hydrolinkhome.eu`)
+- **Multi-region support**: hydrolinkhome.eu (default) and hydrolinkhome.com
 - Automatic metric units for EU region (Liters, kg, L/min)
 - Polish and English translations
 
@@ -33,7 +31,7 @@ Based on the original [Hydrolink-Home-Status](https://github.com/GrumpyTanker/Hy
 
 1. Go to **Settings → Devices & Services → Add Integration**
 2. Search for **HydroLink**
-3. Select your region (United States or Europe)
+3. Select your region (hydrolinkhome.eu is the default, hydrolinkhome.com also available)
 4. Enter your HydroLink email and password
 
 ## Sensors

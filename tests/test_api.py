@@ -9,7 +9,6 @@ from custom_components.hydrolink.api import (
     HydroLinkApi,
     CannotConnect,
     InvalidAuth,
-    Device
 )
 
 # Test data

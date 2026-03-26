@@ -9,13 +9,13 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from custom_components.hydrolink.coordinator import HydroLinkDataUpdateCoordinator
 from custom_components.hydrolink.const import DOMAIN
-from custom_components.hydrolink.api import HydroLinkApi, CannotConnect, InvalidAuth, Device
+from custom_components.hydrolink.api import HydroLinkApi, CannotConnect, InvalidAuth
 
 # Test data
 MOCK_CONFIG = {
     "email": "test@example.com",
     "password": "password123",
-    "region": "united_states",
+    "region": "hydrolinkhome_eu",
 }
 
 MOCK_DEVICE_DATA = {
