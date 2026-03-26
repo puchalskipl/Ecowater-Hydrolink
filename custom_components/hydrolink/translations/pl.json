@@ -1,0 +1,76 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Wybierz region",
+                "description": "Wybierz region swojego konta HydroLink",
+                "data": {
+                    "region": "Region"
+                }
+            },
+            "credentials": {
+                "title": "Połącz z HydroLink",
+                "description": "Podaj adres e-mail i hasło do konta HydroLink",
+                "data": {
+                    "email": "E-mail",
+                    "password": "Hasło"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "Nie udało się połączyć z HydroLink. Sprawdź połączenie internetowe.",
+            "invalid_auth": "Nieprawidłowy e-mail lub hasło.",
+            "unknown": "Wystąpił nieoczekiwany błąd."
+        },
+        "abort": {
+            "already_configured": "To konto HydroLink jest już skonfigurowane."
+        }
+    },
+    "entity": {
+        "binary_sensor": {
+            "connection_status": {
+                "name": "Status połączenia",
+                "state": {
+                    "on": "Online",
+                    "off": "Offline"
+                }
+            },
+            "regeneration_status": {
+                "name": "Status regeneracji",
+                "state": {
+                    "on": "Regeneracja",
+                    "off": "Bezczynny"
+                }
+            }
+        },
+        "sensor": {
+            "salt_level": {
+                "name": "Poziom soli",
+                "state": {
+                    "ok": "OK",
+                    "low": "Niski",
+                    "very_low": "Bardzo niski"
+                }
+            },
+            "water_flow": {
+                "name": "Przepływ wody"
+            },
+            "total_water_used": {
+                "name": "Całkowite zużycie wody"
+            },
+            "days_since_regeneration": {
+                "name": "Dni od regeneracji"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Opcje HydroLink",
+                "data": {
+                    "scan_interval": "Interwał aktualizacji (sekundy)"
+                }
+            }
+        }
+    }
+}
