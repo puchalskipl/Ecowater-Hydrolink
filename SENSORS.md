@@ -417,23 +417,5 @@ Some sensors may not appear if:
 ## Additional Resources
 
 - **Main Documentation**: [README.md](README.md)
-- **Changelog**: [CHANGELOG.md](CHANGELOG.md)
 - **Source Code**: [sensor.py](custom_components/hydrolink/sensor.py)
-- **API Documentation**: [api.py](custom_components/hydrolink/api.py)
-- **Issues**: [GitHub Issues](https://github.com/GrumpyTanker/Ecowater-Hydrolink-HACS/issues)
-
----
-
-## Contributing
-
-Found a sensor that isn't documented or behaves differently? Please:
-1. Open an issue with details about your device model
-2. Include debug logs showing the API response
-3. Specify which sensor(s) need documentation updates
-
----
-
-**Document Version**: 1.2.0  
-**Last Updated**: October 10, 2025  
-**Integration Version**: 1.2.0+
 

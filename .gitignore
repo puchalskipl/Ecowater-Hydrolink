@@ -208,3 +208,4 @@ __marimo__/
 
 # Discovery outputs containing sensitive data
 discovery/outputs/
+.claude/settings.local.json
