@@ -1,249 +1,113 @@
 # EcoWater HydroLink Integration for Home Assistant
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Validate](https://github.com/GrumpyTanker/Ecowater-Hydrolink/workflows/Validate/badge.svg)](https://github.com/GrumpyTanker/Ecowater-Hydrolink/actions)
-[![Run Tests](https://github.com/GrumpyTanker/Ecowater-Hydrolink/workflows/Run%20Tests/badge.svg)](https://github.com/GrumpyTanker/Ecowater-Hydrolink/actions)
 [![HA Core Version](https://img.shields.io/badge/Home%20Assistant-2024.10.0+-blue.svg)](https://www.home-assistant.io)
-[![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org)
 
-A Home Assistant integration for EcoWater's HydroLink connected water softeners. Monitor your water softener's performance, water usage, salt levels, and more directly in Home Assistant with real-time updates and comprehensive analytics.
+A Home Assistant custom component for EcoWater HydroLink connected water softeners. Monitor water usage, salt levels, system performance, and control regeneration — all from Home Assistant.
 
-This integration is a Home Assistant custom component adapted from the original [Hydrolink-Home-Status](https://github.com/GrumpyTanker/Hydrolink-Home-Status) project, enhanced with improved data organization, reliability, and Home Assistant best practices.
+Based on the original [Hydrolink-Home-Status](https://github.com/GrumpyTanker/Hydrolink-Home-Status) project.
 
-## Key Features
+## Features
 
-- 🔄 Real-time monitoring via WebSocket connections
-- 📊 30+ sensors across 8 comprehensive categories
-- 🔧 Service calls for manual regeneration control
-- 🏠 Full Home Assistant integration with proper device modeling
-- 📈 Historical data tracking and analytics
-- 🚨 Alert notifications for system issues
-- 🔒 Secure authentication with EcoWater cloud services
-- 📱 Mobile-friendly interface
-
-## Sensor Categories
-
-### Basic System Information
-- Online Status, Model, Device Name, Serial Number
-
-### Water Usage Monitoring  
-- Current Flow, Daily/Weekly/Monthly Usage, Peak Flow Statistics
-
-### Salt Management
-- Salt Level, Days Remaining, Usage Statistics, Efficiency Tracking
-
-### System Performance
-- Capacity Remaining, Water Hardness, Treatment Statistics
-
-### Regeneration Management
-- Current Status, History, Scheduling, Manual Control
-
-### Critical Alerts
-- Low Salt Warnings, System Errors, Flow Anomalies, Leak Detection
-
-### Signal and Connection
-- WiFi Strength, Connection Quality, Network Status
-
-### Maintenance Information
-- Service Reminders, Operation Statistics, System Health
+- Real-time monitoring via WebSocket connections
+- 40+ sensors across 8 categories (water usage, salt, performance, regeneration, alerts, signal, maintenance, system)
+- Manual regeneration control via service calls
+- **Multi-region support**: United States (`api.hydrolinkhome.com`) and Europe (`api.hydrolinkhome.eu`)
+- Automatic metric units for EU region (Liters, kg, L/min)
+- Polish and English translations
 
 ## Installation
 
-### HACS Installation (Preferred)
-1. Ensure you have [HACS](https://hacs.xyz) installed in your Home Assistant instance
-2. Search for "EcoWater HydroLink" in HACS
-3. Click Install
+### HACS (Recommended)
+1. Install [HACS](https://hacs.xyz) if you haven't already
+2. Add this repository as a custom repository in HACS
+3. Search for "EcoWater HydroLink" and install
 4. Restart Home Assistant
-5. Add the integration via the Home Assistant UI:
-   - Go to Settings → Devices & Services
-   - Click the "+ ADD INTEGRATION" button
-   - Search for "EcoWater HydroLink"
-6. Enter your HydroLink credentials when prompted
 
-### Manual Installation
-1. Download the latest release from the GitHub repository
-2. Copy the `custom_components/hydrolink` directory to your Home Assistant's `custom_components` directory
-3. Restart Home Assistant
+### Manual
+1. Copy `custom_components/hydrolink` to your HA `custom_components` directory
+2. Restart Home Assistant
 
 ## Configuration
 
-1. Go to Settings → Devices & Services in Home Assistant
-2. Click "Add Integration"
-3. Search for "HydroLink"
+1. Go to **Settings → Devices & Services → Add Integration**
+2. Search for **HydroLink**
+3. Select your region (United States or Europe)
 4. Enter your HydroLink email and password
-5. Click "Submit"
 
-## Available Sensors
+## Sensors
 
-📋 **For complete sensor documentation, see [SENSORS.md](SENSORS.md)**  
-🔍 **For data verification and live sensor testing, see [SENSOR_VERIFICATION.md](SENSOR_VERIFICATION.md)**
+The integration auto-discovers all sensors from your device (typically 40+). You can enable/disable individual sensors in **Settings → Devices & Services → HydroLink → Entities**.
 
-The integration **automatically discovers all available sensors** from your HydroLink API. All properties are exposed as sensors (typically 40+ sensors), and you can enable/disable individual sensors based on your needs:
-- Go to Settings → Devices & Services → HydroLink → Entities
-- Click on any sensor to enable/disable it
-- Sensors marked with "Default Enabled" are enabled automatically
+Default-enabled sensors include:
 
-Below is a summary of the main sensors available:
+| Category | Sensors |
+|----------|---------|
+| **Water Usage** | Current Flow, Water Used Today, Average Daily Usage, Total Treated Water, Peak Flow, Available Treated Water |
+| **Salt** | Salt Level (%), Days Until Salt Needed, Salt Per Regeneration, Total Salt Used, Salt Efficiency |
+| **Performance** | Capacity Remaining (%), Operating Capacity, Water Hardness, Hardness Removed |
+| **Regeneration** | Status, Days Since Last Regen, Total/Manual Regen Count, Time Remaining |
+| **Alerts** | Low Salt, Error Code, Flow Monitor, Excessive Water Use, Leak Detector, Service Reminder |
+| **System** | Online Status, WiFi Signal (dBm), Signal Bars, Days in Operation, Power Outages |
 
-### Water Usage and Flow
-| Sensor | Description | Unit |
-|--------|-------------|------|
-| Current Water Flow | Current water flow rate | GPM |
-| Water Used Today | Today's water consumption | Gallons |
-| Average Daily Usage | Average daily water usage | Gallons |
-| Total Treated Water | Total treated water volume | Gallons |
-| Peak Water Flow | Peak water flow rate | GPM |
-| Available Treated Water | Available treated water | Gallons |
+> **EU Region**: Volume sensors show Liters, mass sensors show kg, flow sensors show L/min.
+> **US Region**: Gallons, lbs, GPM (imperial units).
 
-### Salt Management
-| Sensor | Description | Unit |
-|--------|-------------|------|
-| Salt Level | Current salt level | % |
-| Days Until Salt Needed | Estimated days until salt refill | Days |
-| Average Salt Per Regeneration | Salt used per regeneration cycle | lbs |
-| Total Salt Used | Total salt consumption | lbs |
+Full sensor documentation: [SENSORS.md](SENSORS.md)
 
-### System Performance
-| Sensor | Description | Unit |
-|--------|-------------|------|
-| Remaining Capacity | Remaining treatment capacity | % |
-| Operating Capacity | System operating capacity | Grains |
-| Water Hardness | Current water hardness level | Grains |
-| Hardness Removed (Recent) | Hardness removed since last recharge | lbs |
-| Daily Average Hardness Removed | Average daily hardness removal | lbs |
-| Total Hardness Removed | Total lifetime hardness removal | lbs |
+## Services
 
-### Regeneration Status
-| Sensor | Description | Unit |
-|--------|-------------|------|
-| Regeneration Status | Current regeneration state | - |
-| Days Since Last Regeneration | Time since last regeneration | Days |
-| Total Regenerations | Total regeneration cycles | Count |
-| Manual Regenerations | Manual regeneration count | Count |
-| Remaining Regeneration Time | Time left in current cycle | Minutes |
+### `hydrolink.trigger_regeneration`
+Manually start a regeneration cycle.
 
-### System Health and Alerts
-| Sensor | Description | Unit |
-|--------|-------------|------|
-| Low Salt Alert | Salt level warning status | - |
-| Error Code Alert | System error indicator | - |
-| Flow Monitor Alert | Abnormal flow warning | - |
-| Water Usage Alert | Excessive usage warning | - |
-| Leak Detector Alert | Water leak warning | - |
-| Service Reminder | Maintenance reminder | - |
-
-### System Status
-| Sensor | Description | Unit |
-|--------|-------------|------|
-| Online Status | Device connectivity | - |
-| WiFi Signal Strength | Signal strength | dBm |
-| Signal Quality | WiFi signal bars | Count |
-| Days in Operation | System operation time | Days |
-| Power Outage Count | Number of power failures | Count |
-| Service Due | Months until service | Months |
+| Parameter | Description |
+|-----------|-------------|
+| `device_id` | The device ID of the water softener |
 
 ## Troubleshooting
 
-### Common Issues
+**Cannot Connect** — Check your internet connection and that the HydroLink service is operational.
 
-1. **Cannot Connect Error**
-   - Check your internet connection
-   - Verify your HydroLink credentials
-   - Ensure the HydroLink service is operational
+**Authentication Failed** — Verify your email and password. Try logging into the HydroLink app to confirm credentials work.
 
-2. **Authentication Failed**
-   - Double-check your email and password
-   - Try logging out and back in to the HydroLink app
-   - Reset your HydroLink password if needed
-
-3. **No Data Updates**
-   - Check your device's connection to HydroLink
-   - Verify the integration is properly configured
-   - Restart Home Assistant
+**No Data Updates** — Check your device's connection to HydroLink, then restart Home Assistant.
 
 ### Debug Logging
 
-To enable debug logging for the integration:
-
-1. Add the following to your `configuration.yaml`:
 ```yaml
 logger:
-  default: info
   logs:
     custom_components.hydrolink: debug
 ```
-2. Restart Home Assistant
-3. Check the logs for detailed information
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-### Development Status
-
-🎯 **Current Release**: v1.2.0 - Stable release with comprehensive documentation  
-✅ **Test Status**: 35 tests passing across Python 3.9, 3.10, 3.11  
-📊 **Coverage**: 60% test coverage with robust error handling  
-🔧 **CI/CD**: GitHub Actions fully operational with multi-version testing  
-📚 **Documentation**: Comprehensive inline documentation and comments  
-🏠 **Home Assistant**: Compatible with HA 2023.1+ through 2024.10+  
-
-### Testing & Quality
-
-This integration maintains high code quality standards:
-- **Black code formatting** with 88-character line length
-- **Pylint & Ruff linting** for code quality assurance  
-- **Type hints** throughout the codebase
-- **Comprehensive test suite** with pytest and HACS validation
-- **Multi-version compatibility** testing with tox
-- **Pre-commit hooks** for automated quality checks
-
-### Architecture Overview
-
-- **API Client** (`api.py`): Secure HydroLink cloud communication with WebSocket support
-- **Data Coordinator** (`coordinator.py`): Centralized data management and updates
-- **Config Flow** (`config_flow.py`): User-friendly setup and configuration
-- **Sensor Platform** (`sensor.py`): 30+ sensors across 8 comprehensive categories
-- **Service Platform** (`services.py`): Manual regeneration control and actions
 
 ## Version History
 
-### Version 1.2.0 (October 3, 2025)
-- **Enhanced Documentation & Comments**: Comprehensive inline documentation added
-- **Improved Test Coverage**: Version-agnostic ConfigEntry compatibility across HA versions
-- **Multi-Version Testing**: Proper tox configuration for Python 3.9-3.11 compatibility
-- **Enhanced Stability**: Fixed import errors and API compatibility issues
-- **CI/CD Improvements**: GitHub Actions passing on all supported Python versions
-- **Code Quality**: Enhanced error handling and logging throughout codebase
+### 1.3.0 (2026-03-26) — puchalskipl
+- Multi-region support (United States / Europe)
+- Europe API endpoint (`api.hydrolinkhome.eu`) with separate auth cookie handling
+- Automatic metric unit conversion for EU region (Liters, kg, L/min)
+- Two-step config flow with region selection
+- Polish translation
+- Backward compatible with existing config entries (default to US)
 
-### Version 1.1.1 (October 3, 2025)
-- **Cross-Version Compatibility**: Support for Home Assistant 2023.1+ through 2024.10+
-- **ConfigEntry API Fixes**: Version-agnostic handling of API differences
-- **Test Infrastructure**: Comprehensive pytest suite with 35+ tests
-- **Package Structure**: Proper Python package organization for tests
+### 1.2.2 (2025-10-10)
+- Fixed sensor scaling issues (tenths, capacity, salt values)
+- Added 15 new sensor definitions
+- Added `device_class: water` for Energy Dashboard support
 
-### Version 1.0.0 (October 2, 2025)
+### 1.2.0 (2025-10-03)
+- Enhanced documentation, multi-version testing (Python 3.9–3.11)
+- ConfigEntry API compatibility fixes, CI/CD stabilization
+
+### 1.0.0 (2025-10-02)
 - Initial HACS-compatible release
-- Complete restructure for HACS compatibility
-- Updated to MIT license
-- Added comprehensive testing setup
-- Improved documentation and translations
-- Added proper branding assets
-- Configured CI/CD with GitHub Actions
-- Updated minimum Home Assistant version to 2024.10.0
+- 30+ sensors, WebSocket real-time updates, manual regeneration service
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE).
 
-## Acknowledgments
+## Trademark Notice
 
-- Thanks to EcoWater for providing the HydroLink platform
-- Based on the original [Hydrolink-Home-Status](https://github.com/GrumpyTanker/Hydrolink-Home-Status) project
-
-## Trademark Legal Notice
-
-This project is not affiliated with, endorsed by, or connected to EcoWater Systems LLC. EcoWater, HydroLink, and any related logos are trademarks of EcoWater Systems LLC. These trademarks are used solely for the purpose of identifying compatibility with EcoWater products. All trademarks are the property of their respective owners.
-- Thanks to the Home Assistant community for their support and feedback
+This project is not affiliated with EcoWater Systems LLC. EcoWater and HydroLink are trademarks of EcoWater Systems LLC, used here solely for compatibility identification.
