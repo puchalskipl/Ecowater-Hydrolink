@@ -49,8 +49,8 @@ Default-enabled sensors include:
 | **Alerts** | Low Salt, Error Code, Flow Monitor, Excessive Water Use, Leak Detector, Service Reminder |
 | **System** | Online Status, WiFi Signal (dBm), Signal Bars, Days in Operation, Power Outages |
 
-> **EU Region**: Volume sensors show Liters, mass sensors show kg, flow sensors show L/min.
-> **US Region**: Gallons, lbs, GPM (imperial units).
+> **EU**: Volume sensors show Liters, mass sensors show kg, flow sensors show L/min.
+> **COM**: Gallons, lbs, GPM (imperial units).
 
 Full sensor documentation: [SENSORS.md](SENSORS.md)
 
@@ -81,13 +81,13 @@ logger:
 
 ## Version History
 
-### 1.3.0 (2026-03-26) — puchalskipl
+### 1.3.0 (2026-03-26)
 - Multi-region support (United States / Europe)
 - Europe API endpoint (`api.hydrolinkhome.eu`) with separate auth cookie handling
 - Automatic metric unit conversion for EU region (Liters, kg, L/min)
 - Two-step config flow with region selection
 - Polish translation
-- Backward compatible with existing config entries (default to US)
+- Default region: hydrolinkhome.eu
 
 ### 1.2.2 (2025-10-10)
 - Fixed sensor scaling issues (tenths, capacity, salt values)

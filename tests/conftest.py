@@ -1,26 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-EcoWater HydroLink Test Configuration
-
-Provides shared test configuration and fixtures for all HydroLink tests.
-
-Author: GrumpyTanker + AI
-Created: June 12, 2025
-Updated: October 2, 2025
-
-Changelog:
-- 0.1.0 (2025-06-12)
-  * Initial release
-  * Basic test configuration
-  
-- 0.2.0 (2025-10-02)
-  * Added socket disabling
-  * Improved test isolation
-
-License: MIT
-See LICENSE file in the project root for full license information.
-"""
-
 import asyncio
 import contextlib
 import os
@@ -37,7 +15,6 @@ def disable_socket_for_tests():
         disable_socket()
     return True
 
-import asyncio
 
 class MockEventLoop(asyncio.AbstractEventLoop):
     """A mock event loop for testing."""
@@ -99,17 +76,13 @@ def hass(mock_event_loop):
     hass.config = Mock()
     hass.config.config_dir = "/test/config"
     hass.data = {
-        "integrations": {},  # Required for async_setup_component
-        "device_registry": {},  # May be needed
-        "entity_registry": {},  # May be needed
+        "integrations": {},
+        "device_registry": {},
+        "entity_registry": {},
     }
     hass.config.components = set()
-    
-    # Mock core services
     hass.services = Mock()
     hass.services.async_register = AsyncMock()
-    
-    # Mock async methods
     hass.async_add_executor_job = AsyncMock()
     hass.config_entries = Mock()
     hass.config_entries.async_forward_entry_setups = AsyncMock(return_value=True)
@@ -117,8 +90,6 @@ def hass(mock_event_loop):
     hass.config_entries.async_unload_platforms = AsyncMock(return_value=True)
     hass.config_entries.async_entries = AsyncMock(return_value=[])
     hass.config_entries.async_flow_progress = AsyncMock(return_value=[])
-    
-    # Set up loop
     hass.loop = mock_event_loop
     
     return hass

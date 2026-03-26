@@ -3,14 +3,14 @@
   "name": "EcoWater HydroLink",
   "after_dependencies": [],
   "codeowners": [
-    "@GrumpyTanker"
+    "@puchalskipl"
   ],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/GrumpyTanker/Ecowater-Hydrolink-HACS",
+  "documentation": "https://github.com/puchalskipl/Ecowater-Hydrolink",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/GrumpyTanker/Ecowater-Hydrolink-HACS/issues",
+  "issue_tracker": "https://github.com/puchalskipl/Ecowater-Hydrolink/issues",
   "requirements": [
     "requests",
     "websocket-client"
