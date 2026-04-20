@@ -54,7 +54,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> "OptionsFlowHandler":
         """Return the options flow handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
     async def async_step_user(self, user_input=None):
         """Handle the region selection step."""
@@ -118,11 +118,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle HydroLink options."""
+    """Handle HydroLink options.
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
+    No __init__: HA 2024.11+ exposes `self.config_entry` as a read-only property,
+    set automatically by the OptionsFlowManager from the entry passed to
+    `async_get_options_flow`. Setting it explicitly raises AttributeError.
+    """
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""

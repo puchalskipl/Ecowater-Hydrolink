@@ -1,5 +1,6 @@
 """Test the config flow."""
-from unittest.mock import AsyncMock, Mock, patch
+from contextlib import contextmanager
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 import pytest
 import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
@@ -188,6 +189,25 @@ def _make_entry(options=None):
     return entry
 
 
+@contextmanager
+def _options_handler(entry):
+    """Construct an OptionsFlowHandler with a fake config_entry.
+
+    HA 2024.11+ exposes `OptionsFlow.config_entry` as a read-only property bound
+    to the entry passed to `async_get_options_flow`. Older HA versions don't
+    have the attribute on the class at all. `create=True` covers both cases.
+    """
+    handler = OptionsFlowHandler()
+    with patch.object(
+        OptionsFlowHandler,
+        "config_entry",
+        new_callable=PropertyMock,
+        return_value=entry,
+        create=True,
+    ):
+        yield handler
+
+
 def test_async_get_options_flow_returns_handler():
     handler = ConfigFlow.async_get_options_flow(_make_entry())
     assert isinstance(handler, OptionsFlowHandler)
@@ -196,9 +216,8 @@ def test_async_get_options_flow_returns_handler():
 @pytest.mark.asyncio
 async def test_options_flow_shows_form_with_current_value():
     entry = _make_entry({CONF_SCAN_INTERVAL: 12})
-    handler = OptionsFlowHandler(entry)
-
-    result = await handler.async_step_init()
+    with _options_handler(entry) as handler:
+        result = await handler.async_step_init()
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
@@ -208,9 +227,8 @@ async def test_options_flow_shows_form_with_current_value():
 
 @pytest.mark.asyncio
 async def test_options_flow_defaults_to_constant_when_not_set():
-    handler = OptionsFlowHandler(_make_entry())
-
-    result = await handler.async_step_init()
+    with _options_handler(_make_entry()) as handler:
+        result = await handler.async_step_init()
 
     schema_keys = {k.schema: k.default() for k in result["data_schema"].schema}
     assert schema_keys[CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL_MINUTES
@@ -218,9 +236,8 @@ async def test_options_flow_defaults_to_constant_when_not_set():
 
 @pytest.mark.asyncio
 async def test_options_flow_creates_entry_on_submit():
-    handler = OptionsFlowHandler(_make_entry())
-
-    result = await handler.async_step_init({CONF_SCAN_INTERVAL: 10})
+    with _options_handler(_make_entry()) as handler:
+        result = await handler.async_step_init({CONF_SCAN_INTERVAL: 10})
 
     assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_SCAN_INTERVAL: 10}
@@ -229,8 +246,8 @@ async def test_options_flow_creates_entry_on_submit():
 @pytest.mark.asyncio
 async def test_options_flow_rejects_out_of_range_via_schema():
     """Voluptuous schema must reject values outside [MIN, MAX]."""
-    handler = OptionsFlowHandler(_make_entry())
-    result = await handler.async_step_init()
+    with _options_handler(_make_entry()) as handler:
+        result = await handler.async_step_init()
     schema = result["data_schema"]
 
     with pytest.raises(vol.Invalid):
@@ -242,9 +259,21 @@ async def test_options_flow_rejects_out_of_range_via_schema():
 @pytest.mark.asyncio
 async def test_options_flow_coerces_string_to_int():
     """Schema accepts string-typed numeric input from the UI."""
-    handler = OptionsFlowHandler(_make_entry())
-    result = await handler.async_step_init()
+    with _options_handler(_make_entry()) as handler:
+        result = await handler.async_step_init()
     schema = result["data_schema"]
 
     validated = schema({CONF_SCAN_INTERVAL: "15"})
     assert validated[CONF_SCAN_INTERVAL] == 15
+
+
+def test_options_flow_handler_does_not_assign_config_entry():
+    """Regression: HA 2024.11+ makes `config_entry` a read-only property, so
+    assigning it from __init__ raises AttributeError and breaks Configure with
+    a 500. Source-level check works across HA versions."""
+    import inspect
+    src = inspect.getsource(OptionsFlowHandler)
+    assert "self.config_entry =" not in src, (
+        "OptionsFlowHandler must not assign self.config_entry — "
+        "it crashes Configure on HA 2024.11+"
+    )

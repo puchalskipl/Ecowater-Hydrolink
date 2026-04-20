@@ -87,6 +87,10 @@ logger:
 
 ## Version History
 
+### 1.4.1 (2026-04-20)
+- Fix: opening "Configure" raised AttributeError on HA 2024.11+ (`config_entry` is now a read-only property; we no longer set it from `__init__`)
+- Coordinator now logs the underlying API error instead of a generic "Error communicating with API"
+
 ### 1.4.0 (2026-04-20)
 - Honors `Retry-After` header on 429 responses with exponential backoff (cap 15 min)
 - Circuit breaker pauses polling for 30 minutes after 3 consecutive 429s (logged once as WARNING, not ERROR)

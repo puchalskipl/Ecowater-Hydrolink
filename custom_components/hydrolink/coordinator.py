@@ -44,6 +44,6 @@ class HydroLinkDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             return await self.hass.async_add_executor_job(self.api.get_data)
         except InvalidAuth as err:
-            raise UpdateFailed("Invalid authentication") from err
+            raise UpdateFailed(f"Invalid authentication: {err}") from err
         except CannotConnect as err:
-            raise UpdateFailed("Error communicating with API") from err
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
