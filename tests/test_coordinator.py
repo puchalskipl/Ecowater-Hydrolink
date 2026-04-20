@@ -8,7 +8,11 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from custom_components.hydrolink.coordinator import HydroLinkDataUpdateCoordinator
-from custom_components.hydrolink.const import DOMAIN
+from custom_components.hydrolink.const import (
+    DOMAIN,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL_MINUTES,
+)
 from custom_components.hydrolink.api import HydroLinkApi, CannotConnect, InvalidAuth
 
 # Test data
@@ -188,7 +192,40 @@ async def test_coordinator_empty_devices_list(hass: HomeAssistant, mock_config_e
     hass.async_add_executor_job = mock_executor_job
     
     data = await coordinator._async_update_data()
-    
+
     assert data == []
     mock_api.login.assert_called_once()
     mock_api.get_data.assert_called_once()
+
+
+# ---------- scan_interval from options ----------
+
+def _entry_with_options(options: dict) -> ConfigEntry:
+    common = dict(
+        version=1,
+        minor_version=1,
+        domain=DOMAIN,
+        title="HydroLink Test",
+        data=MOCK_CONFIG,
+        source="user",
+        options=options,
+        unique_id="test@example.com",
+    )
+    try:
+        return ConfigEntry(**common, discovery_keys=None)
+    except TypeError:
+        return ConfigEntry(**common)
+
+
+@pytest.mark.asyncio
+async def test_coordinator_uses_default_scan_interval(hass: HomeAssistant):
+    entry = _entry_with_options({})
+    coordinator = HydroLinkDataUpdateCoordinator(hass, entry)
+    assert coordinator.update_interval == timedelta(minutes=DEFAULT_SCAN_INTERVAL_MINUTES)
+
+
+@pytest.mark.asyncio
+async def test_coordinator_uses_custom_scan_interval_from_options(hass: HomeAssistant):
+    entry = _entry_with_options({CONF_SCAN_INTERVAL: 20})
+    coordinator = HydroLinkDataUpdateCoordinator(hass, entry)
+    assert coordinator.update_interval == timedelta(minutes=20)

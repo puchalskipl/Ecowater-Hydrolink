@@ -90,7 +90,7 @@
             "init": {
                 "title": "Opcje HydroLink",
                 "data": {
-                    "scan_interval": "Interwał aktualizacji (sekundy)"
+                    "scan_interval": "Interwał aktualizacji (minuty)"
                 }
             }
         }

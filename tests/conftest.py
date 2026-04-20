@@ -2,15 +2,29 @@
 import asyncio
 import contextlib
 import os
+import sys
 from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from pytest_socket import disable_socket, enable_socket
 
+
+if sys.platform == "win32":
+    # On Windows, ProactorEventLoop.self_pipe goes through socket.socket() (no native
+    # socketpair), so any disable_socket() call breaks every pytest-asyncio test.
+    # pytest-homeassistant-custom-component disables sockets for every test in its
+    # pytest_runtest_setup hook, which we cannot reorder reliably. Neuter it here.
+    # Tests use mocks, so allowing real sockets is harmless. CI runs on Linux.
+    import pytest_socket
+    pytest_socket.disable_socket = lambda *args, **kwargs: None
+
+
 @pytest.fixture(autouse=True)
 def disable_socket_for_tests():
-    """Disable socket usage for most tests."""
+    """Disable socket usage for most tests (Linux/macOS only)."""
+    if sys.platform == "win32":
+        return True
     with contextlib.suppress(Exception):
         disable_socket()
     return True

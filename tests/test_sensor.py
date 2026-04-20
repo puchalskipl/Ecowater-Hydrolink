@@ -285,3 +285,59 @@ async def test_async_setup_entry(hass: HomeAssistant):
     assert async_add_entities.called
     entities = async_add_entities.call_args[0][0]
     assert len(entities) == 2  # Two properties in mock data
+
+
+# ---------- available property + unknown handling ----------
+
+def test_available_true_when_device_present_and_coordinator_healthy(sensor, mock_coordinator):
+    mock_coordinator.last_update_success = True
+    assert sensor.available is True
+
+
+def test_available_false_when_coordinator_failed(sensor, mock_coordinator):
+    mock_coordinator.last_update_success = False
+    assert sensor.available is False
+
+
+def test_available_false_when_device_missing_from_payload(mock_coordinator):
+    """If the API drops a device from the response, the entity should mark unavailable."""
+    mock_coordinator.last_update_success = True
+    sensor = HydroLinkSensor(
+        mock_coordinator, "missing-device-id", MOCK_PROPERTY, MOCK_DEVICE_NAME, {"value": 1}
+    )
+    assert sensor.available is False
+
+
+def test_available_false_when_coordinator_data_is_none(mock_coordinator):
+    mock_coordinator.last_update_success = True
+    mock_coordinator.data = None
+    sensor = HydroLinkSensor(
+        mock_coordinator, MOCK_DEVICE_ID, MOCK_PROPERTY, MOCK_DEVICE_NAME, {"value": 1}
+    )
+    assert sensor.available is False
+
+
+def test_native_value_returns_none_for_unknown_string():
+    """A literal 'unknown' from the API must surface as None (not the string)."""
+    coordinator = Mock()
+    coordinator.last_update_success = True
+    coordinator.data = [
+        {
+            "id": MOCK_DEVICE_ID,
+            "properties": {"some_metric": {"value": "unknown"}},
+        }
+    ]
+    sensor = HydroLinkSensor(
+        coordinator, MOCK_DEVICE_ID, "some_metric", MOCK_DEVICE_NAME, {"value": "unknown"}
+    )
+    assert sensor.native_value is None
+
+
+def test_native_value_returns_none_when_property_missing():
+    coordinator = Mock()
+    coordinator.last_update_success = True
+    coordinator.data = [{"id": MOCK_DEVICE_ID, "properties": {}}]
+    sensor = HydroLinkSensor(
+        coordinator, MOCK_DEVICE_ID, "absent_prop", MOCK_DEVICE_NAME, {"value": 1}
+    )
+    assert sensor.native_value is None

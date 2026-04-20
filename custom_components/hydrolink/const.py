@@ -4,6 +4,11 @@
 DOMAIN = "hydrolink"
 
 CONF_REGION = "region"
+CONF_SCAN_INTERVAL = "scan_interval"
+
+DEFAULT_SCAN_INTERVAL_MINUTES = 5
+MIN_SCAN_INTERVAL_MINUTES = 1
+MAX_SCAN_INTERVAL_MINUTES = 60
 
 REGION_COM = "hydrolinkhome_com"
 REGION_EU = "hydrolinkhome_eu"

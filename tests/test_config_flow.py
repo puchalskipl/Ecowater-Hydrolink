@@ -1,9 +1,18 @@
 """Test the config flow."""
 from unittest.mock import AsyncMock, Mock, patch
 import pytest
+import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
-from custom_components.hydrolink.const import DOMAIN, CONF_REGION, REGION_COM, REGION_EU
-from custom_components.hydrolink.config_flow import ConfigFlow
+from custom_components.hydrolink.const import (
+    DOMAIN,
+    CONF_REGION,
+    CONF_SCAN_INTERVAL,
+    REGION_COM,
+    REGION_EU,
+    DEFAULT_SCAN_INTERVAL_MINUTES,
+    MAX_SCAN_INTERVAL_MINUTES,
+)
+from custom_components.hydrolink.config_flow import ConfigFlow, OptionsFlowHandler
 from custom_components.hydrolink.api import CannotConnect, InvalidAuth
 from tests.helpers import create_mock_hass
 
@@ -169,3 +178,73 @@ async def test_failed_config_flow_cannot_connect():
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+# ---------- Options flow ----------
+
+def _make_entry(options=None):
+    entry = Mock()
+    entry.options = options or {}
+    return entry
+
+
+def test_async_get_options_flow_returns_handler():
+    handler = ConfigFlow.async_get_options_flow(_make_entry())
+    assert isinstance(handler, OptionsFlowHandler)
+
+
+@pytest.mark.asyncio
+async def test_options_flow_shows_form_with_current_value():
+    entry = _make_entry({CONF_SCAN_INTERVAL: 12})
+    handler = OptionsFlowHandler(entry)
+
+    result = await handler.async_step_init()
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "init"
+    schema_keys = {k.schema: k.default() for k in result["data_schema"].schema}
+    assert schema_keys[CONF_SCAN_INTERVAL] == 12
+
+
+@pytest.mark.asyncio
+async def test_options_flow_defaults_to_constant_when_not_set():
+    handler = OptionsFlowHandler(_make_entry())
+
+    result = await handler.async_step_init()
+
+    schema_keys = {k.schema: k.default() for k in result["data_schema"].schema}
+    assert schema_keys[CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL_MINUTES
+
+
+@pytest.mark.asyncio
+async def test_options_flow_creates_entry_on_submit():
+    handler = OptionsFlowHandler(_make_entry())
+
+    result = await handler.async_step_init({CONF_SCAN_INTERVAL: 10})
+
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_SCAN_INTERVAL: 10}
+
+
+@pytest.mark.asyncio
+async def test_options_flow_rejects_out_of_range_via_schema():
+    """Voluptuous schema must reject values outside [MIN, MAX]."""
+    handler = OptionsFlowHandler(_make_entry())
+    result = await handler.async_step_init()
+    schema = result["data_schema"]
+
+    with pytest.raises(vol.Invalid):
+        schema({CONF_SCAN_INTERVAL: MAX_SCAN_INTERVAL_MINUTES + 1})
+    with pytest.raises(vol.Invalid):
+        schema({CONF_SCAN_INTERVAL: 0})
+
+
+@pytest.mark.asyncio
+async def test_options_flow_coerces_string_to_int():
+    """Schema accepts string-typed numeric input from the UI."""
+    handler = OptionsFlowHandler(_make_entry())
+    result = await handler.async_step_init()
+    schema = result["data_schema"]
+
+    validated = schema({CONF_SCAN_INTERVAL: "15"})
+    assert validated[CONF_SCAN_INTERVAL] == 15

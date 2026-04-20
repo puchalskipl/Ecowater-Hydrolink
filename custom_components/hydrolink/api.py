@@ -12,6 +12,13 @@ import time
 
 _LOGGER = logging.getLogger(__name__)
 
+RETRY_INITIAL_BACKOFF_SECONDS = 30
+RETRY_MAX_BACKOFF_SECONDS = 900  # 15 min cap per individual sleep
+RETRY_MAX_ATTEMPTS = 3
+CIRCUIT_BREAKER_THRESHOLD = 3
+CIRCUIT_BREAKER_COOLDOWN_SECONDS = 1800  # 30 min after threshold tripped
+REQUEST_TIMEOUT_SECONDS = 10
+
 
 class HydroLinkApi:
     """HydroLink API interface.
@@ -36,6 +43,66 @@ class HydroLinkApi:
         self.WS_BASE_URL: str = region_config["ws_base_url"]
         self.auth_cookie_name: str = region_config["auth_cookie_name"]
 
+        self._consecutive_429: int = 0
+        self._cooldown_until: float = 0.0
+
+    @staticmethod
+    def _parse_retry_after(header: Optional[str], fallback: float) -> float:
+        """Parse Retry-After header (delta-seconds form). Returns fallback on parse failure."""
+        if not header:
+            return fallback
+        try:
+            return float(header)
+        except ValueError:
+            return fallback
+
+    def _request_with_retry(self, method: str, url: str, **kwargs) -> requests.Response:
+        """HTTP request with 429 handling and circuit breaker.
+
+        Honors Retry-After header; falls back to exponential backoff capped at 15 min.
+        After CIRCUIT_BREAKER_THRESHOLD consecutive 429s, pauses requests for
+        CIRCUIT_BREAKER_COOLDOWN_SECONDS and raises RateLimited immediately on subsequent calls.
+        """
+        now = time.monotonic()
+        if self._cooldown_until > now:
+            remaining = int(self._cooldown_until - now)
+            raise RateLimited(f"Rate-limit cooldown active, {remaining}s remaining")
+
+        kwargs.setdefault("timeout", REQUEST_TIMEOUT_SECONDS)
+        backoff = RETRY_INITIAL_BACKOFF_SECONDS
+
+        for attempt in range(1, RETRY_MAX_ATTEMPTS + 1):
+            response = requests.request(method, url, **kwargs)
+            if response.status_code != 429:
+                self._consecutive_429 = 0
+                return response
+
+            self._consecutive_429 += 1
+            if self._consecutive_429 >= CIRCUIT_BREAKER_THRESHOLD:
+                self._cooldown_until = time.monotonic() + CIRCUIT_BREAKER_COOLDOWN_SECONDS
+                _LOGGER.warning(
+                    "HydroLink rate-limited %d times in a row; pausing requests for %d minutes",
+                    self._consecutive_429,
+                    CIRCUIT_BREAKER_COOLDOWN_SECONDS // 60,
+                )
+                raise RateLimited("Circuit breaker tripped after repeated 429 responses")
+
+            if attempt == RETRY_MAX_ATTEMPTS:
+                break
+
+            wait = min(
+                self._parse_retry_after(response.headers.get("Retry-After"), backoff),
+                RETRY_MAX_BACKOFF_SECONDS,
+            )
+            _LOGGER.warning(
+                "HydroLink rate-limited (429) on %s; sleeping %.0fs before retry %d/%d",
+                url, wait, attempt + 1, RETRY_MAX_ATTEMPTS,
+            )
+            time.sleep(wait)
+            backoff *= 2
+
+        raise RateLimited(f"Rate-limited after {RETRY_MAX_ATTEMPTS} attempts")
+
     def login(self) -> bool:
         """Authenticate with the HydroLink API.
 
@@ -44,16 +111,14 @@ class HydroLinkApi:
             CannotConnect: If there is a connection or timeout error.
         """
         try:
-            response = requests.post(
+            response = self._request_with_retry(
+                "POST",
                 f"{self.BASE_URL}/auth/login",
                 json={"email": self.email, "password": self.password},
-                timeout=10,
             )
 
             if response.status_code == 401:
                 raise InvalidAuth("Invalid email or password")
-            elif response.status_code == 429:
-                raise CannotConnect("Rate limit exceeded")
             elif response.status_code >= 500:
                 raise CannotConnect(f"Server error: {response.status_code}")
 
@@ -130,11 +195,11 @@ class HydroLinkApi:
             self.login()
 
         try:
-            response = requests.get(
+            response = self._request_with_retry(
+                "GET",
                 f"{self.BASE_URL}/devices",
                 params={"all": "false", "per_page": "200"},
                 cookies={self.auth_cookie_name: self.auth_cookie},
-                timeout=10,
             )
 
             if response.status_code == 401:
@@ -151,10 +216,10 @@ class HydroLinkApi:
                         _LOGGER.warning("Device without ID found, skipping")
                         continue
 
-                    response = requests.get(
+                    response = self._request_with_retry(
+                        "GET",
                         f"{self.BASE_URL}/devices/{device_id}/live",
                         cookies={self.auth_cookie_name: self.auth_cookie},
-                        timeout=10,
                     )
                     response.raise_for_status()
 
@@ -187,11 +252,11 @@ class HydroLinkApi:
                 except requests.RequestException as err:
                     _LOGGER.error("Error refreshing device %s: %s", device.get("id", "unknown"), err)
 
-            response = requests.get(
+            response = self._request_with_retry(
+                "GET",
                 f"{self.BASE_URL}/devices",
                 params={"all": "false", "per_page": "200"},
                 cookies={self.auth_cookie_name: self.auth_cookie},
-                timeout=10,
             )
             response.raise_for_status()
 
@@ -210,10 +275,10 @@ class HydroLinkApi:
             self.login()
 
         try:
-            response = requests.post(
+            response = self._request_with_retry(
+                "POST",
                 f"{self.BASE_URL}/devices/{device_id}/regenerate",
                 cookies={self.auth_cookie_name: self.auth_cookie},
-                timeout=10
             )
 
             if response.status_code == 401:
@@ -233,6 +298,10 @@ class HydroLinkApi:
 
 class CannotConnect(Exception):
     """Error to indicate we cannot connect."""
+
+
+class RateLimited(CannotConnect):
+    """Error to indicate the API is rate-limiting us (429)."""
 
 
 class InvalidAuth(Exception):

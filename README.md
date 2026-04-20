@@ -34,6 +34,12 @@ A Home Assistant custom component for EcoWater HydroLink connected water softene
 3. Select your region (hydrolinkhome.eu is the default, hydrolinkhome.com also available)
 4. Enter your HydroLink email and password
 
+### Options
+
+After setup, click **Configure** on the HydroLink card to adjust:
+
+- **Update interval (minutes)** — how often the integration polls the cloud API. Default: 5 minutes (range 1–60). Increase if you keep hitting rate limits; the integration will reload automatically when you save.
+
 ## Sensors
 
 The integration auto-discovers all sensors from your device (~110 properties). 17 most useful sensors are enabled by default. You can enable/disable any sensor in **Settings → Devices & Services → HydroLink → Entities**.
@@ -69,6 +75,8 @@ Manually start a regeneration cycle.
 
 **No Data Updates** — Check your device's connection to HydroLink, then restart Home Assistant.
 
+**Rate Limited (429)** — The HydroLink cloud API enforces request quotas. The integration honors `Retry-After` and uses exponential backoff (cap 15 min); after 3 consecutive 429s it pauses polling for 30 minutes. If you see this often, raise the **Update interval** in Configure.
+
 ### Debug Logging
 
 ```yaml
@@ -78,6 +86,13 @@ logger:
 ```
 
 ## Version History
+
+### 1.4.0 (2026-04-20)
+- Honors `Retry-After` header on 429 responses with exponential backoff (cap 15 min)
+- Circuit breaker pauses polling for 30 minutes after 3 consecutive 429s (logged once as WARNING, not ERROR)
+- Configurable poll interval via the Configure dialog (1–60 min, default 5)
+- Sensors mark themselves unavailable when the device drops out of the API payload, instead of returning `"unknown"`
+- Single shared HTTP request helper used across login, data fetch, and regeneration
 
 ### 1.3.0 (2026-03-26)
 - Multi-region support (hydrolinkhome.eu default, hydrolinkhome.com)

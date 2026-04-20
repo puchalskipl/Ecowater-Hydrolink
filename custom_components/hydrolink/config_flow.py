@@ -4,10 +4,21 @@ import logging
 
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, CONF_REGION, REGIONS, REGION_EU
+from .const import (
+    DOMAIN,
+    CONF_REGION,
+    CONF_SCAN_INTERVAL,
+    REGIONS,
+    REGION_EU,
+    DEFAULT_SCAN_INTERVAL_MINUTES,
+    MIN_SCAN_INTERVAL_MINUTES,
+    MAX_SCAN_INTERVAL_MINUTES,
+)
 from .api import HydroLinkApi, CannotConnect, InvalidAuth
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,6 +49,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize the config flow."""
         self._region: str = REGION_EU
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> "OptionsFlowHandler":
+        """Return the options flow handler."""
+        return OptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input=None):
         """Handle the region selection step."""
@@ -98,3 +115,37 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=DATA_SCHEMA,
             errors=errors,
         )
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle HydroLink options."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        current_interval = self.config_entry.options.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_MINUTES
+        )
+
+        options_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_SCAN_INTERVAL,
+                    default=current_interval,
+                ): vol.All(
+                    vol.Coerce(int),
+                    vol.Range(
+                        min=MIN_SCAN_INTERVAL_MINUTES,
+                        max=MAX_SCAN_INTERVAL_MINUTES,
+                    ),
+                ),
+            }
+        )
+
+        return self.async_show_form(step_id="init", data_schema=options_schema)

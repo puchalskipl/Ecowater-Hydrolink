@@ -8,7 +8,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 from .api import HydroLinkApi, CannotConnect, InvalidAuth
-from .const import DOMAIN, CONF_REGION, REGION_EU
+from .const import (
+    DOMAIN,
+    CONF_REGION,
+    CONF_SCAN_INTERVAL,
+    REGION_EU,
+    DEFAULT_SCAN_INTERVAL_MINUTES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,11 +29,14 @@ class HydroLinkDataUpdateCoordinator(DataUpdateCoordinator):
             entry.data[CONF_PASSWORD],
             entry.data.get(CONF_REGION, REGION_EU),
         )
+        scan_interval = entry.options.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_MINUTES
+        )
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=5),
+            update_interval=timedelta(minutes=scan_interval),
         )
 
     async def _async_update_data(self):

@@ -435,52 +435,67 @@ class HydroLinkSensor(CoordinatorEntity, SensorEntity):
             self._property_name in DEFAULT_ENABLED_SENSORS
         )
 
+    def _device_data(self):
+        """Locate this entity's device in the latest coordinator payload."""
+        if not self.coordinator.data:
+            return None
+        for device in self.coordinator.data:
+            if device.get("id") == self._device_id:
+                return device
+        return None
+
+    @property
+    def available(self) -> bool:
+        """Reflect coordinator health and presence of the device in the latest payload."""
+        return super().available and self._device_data() is not None
+
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        for device in self.coordinator.data:
-            if device["id"] == self._device_id:
-                # Salt level: use enriched_data percentage instead of raw sensor reading
-                if self._property_name == "salt_level_tenths":
-                    enriched = device.get("enriched_data", {})
-                    wt = enriched.get("water_treatment", {})
-                    sl = wt.get("salt_level", {})
-                    percent = sl.get("salt_level_percent")
-                    if percent is not None:
-                        return percent
-                    return device["properties"][self._property_name].get("value", 0) / 10
+        device = self._device_data()
+        if device is None:
+            return None
 
-                prop = device["properties"][self._property_name]
+        if self._property_name == "salt_level_tenths":
+            enriched = device.get("enriched_data", {})
+            wt = enriched.get("water_treatment", {})
+            sl = wt.get("salt_level", {})
+            percent = sl.get("salt_level_percent")
+            if percent is not None:
+                return percent
+            raw = device.get("properties", {}).get(self._property_name, {}).get("value")
+            if isinstance(raw, (int, float)):
+                return raw / 10
+            return None
 
-                if self._use_converted and "converted_value" in prop:
-                    value = prop.get("converted_value")
-                else:
-                    value = prop.get("value")
+        prop = device.get("properties", {}).get(self._property_name)
+        if prop is None:
+            return None
 
-                if (value == "unknown" and self.device_class in [
-                    SensorDeviceClass.ENERGY, SensorDeviceClass.POWER,
-                    SensorDeviceClass.CURRENT, SensorDeviceClass.VOLTAGE,
-                    SensorDeviceClass.PRESSURE, SensorDeviceClass.TEMPERATURE,
-                ]):
-                    return None
+        if self._use_converted and "converted_value" in prop:
+            value = prop.get("converted_value")
+        else:
+            value = prop.get("value")
 
-                # Scale values stored in tenths or thousandths by the API
-                if isinstance(value, (int, float)):
-                    if "_tenths" in self._property_name:
-                        return value / 10
-                    if self._property_name == "capacity_remaining_percent":
-                        return value / 10
-                    if self._property_name == "average_exhaustion_percent":
-                        return value / 10
-                    if self._property_name == "avg_days_between_regens":
-                        return value / 100
-                    if self._property_name == "total_salt_use_lbs":
-                        return value / 10
-                    if self._property_name == "avg_salt_per_regen_lbs":
-                        return value / 10000
+        if value is None or value == "unknown":
+            return None
 
-                return value
-        return None
+        # Scale values stored in tenths or thousandths by the API
+        if isinstance(value, (int, float)):
+            if "_tenths" in self._property_name:
+                return value / 10
+            if self._property_name == "capacity_remaining_percent":
+                return value / 10
+            if self._property_name == "average_exhaustion_percent":
+                return value / 10
+            if self._property_name == "avg_days_between_regens":
+                return value / 100
+            if self._property_name == "total_salt_use_lbs":
+                return value / 10
+            if self._property_name == "avg_salt_per_regen_lbs":
+                return value / 10000
+
+        return value
 
     @property
     def device_info(self):
